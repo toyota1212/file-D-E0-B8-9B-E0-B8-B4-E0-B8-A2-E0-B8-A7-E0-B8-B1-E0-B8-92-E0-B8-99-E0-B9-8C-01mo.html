@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>แอปเก็บเงินรายวัน</title>
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 400px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 32px 24px;
+        }
+        h1 {
+            color: #388e3c;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 16px 0;
+            border-radius: 8px;
+            border: 1px solid #bdbdbd;
+            font-size: 1em;
+        }
+        button {
+            background: #388e3c;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 0;
+            width: 100%;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2e7031;
+        }
+        .money-list {
+            margin-top: 16px;
+        }
+        .money-item {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            color: #388e3c;
+            font-size: 1em;
+            position: relative;
+        }
+        .reduce-box {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .reduce-box input {
+            width: 80px;
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid #bdbdbd;
+        }
+        .reduce-box button {
+            width: auto;
+            padding: 6px 16px;
+            background: #d32f2f;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 0.95em;
+            margin-bottom: 0;
+        }
+        .reduce-box button:hover {
+            background: #b71c1c;
+        }
+        .total {
+            text-align: right;
+            font-weight: bold;
+            color: #388e3c;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>แอปเก็บเงินรายวัน</h1>
+        <label for="date">วันที่:</label>
+        <input type="date" id="date">
+        <label for="amount">จำนวนเงินที่เก็บ (บาท):</label>
+        <input type="number" id="amount" min="1" placeholder="เช่น 100">
+        <button onclick="addMoney()">บันทึกเงิน</button>
+        <div class="money-list" id="moneyList"></div>
+        <div class="total" id="totalMoney">รวมทั้งหมด: 0 บาท</div>
+    </div>
+    <script>
+        let moneyArr = JSON.parse(localStorage.getItem('moneyArr') || '[]');
+        function addMoney() {
+            const amount = document.getElementById('amount').value;
+            const date = document.getElementById('date').value;
+            if (amount && amount > 0 && date) {
+                moneyArr.push({amount: Number(amount), date: date});
+                localStorage.setItem('moneyArr', JSON.stringify(moneyArr));
+                updateList();
+                document.getElementById('amount').value = '';
+                document.getElementById('date').value = '';
+            }
+        }
+        function updateList() {
+            const list = document.getElementById('moneyList');
+            list.innerHTML = '';
+            moneyArr.forEach((m, i) => {
+                list.innerHTML += `
+                <div class="money-item">
+                    วันที่ ${m.date} : ${m.amount} บาท
+                    <div class="reduce-box">
+                        <input type="number" id="reduce-${i}" min="1" placeholder="จำนวนที่ลด">
+                        <button onclick="reduceMoney(${i})">ลด</button>
+                    </div>
+                </div>`;
+            });
+            const total = moneyArr.reduce((a, b) => a + b.amount, 0);
+            document.getElementById('totalMoney').innerText = `รวมทั้งหมด: ${total} บาท`;
+        }
+        function reduceMoney(index) {
+            const reduceInput = document.getElementById('reduce-' + index);
+            const reduceAmount = Number(reduceInput.value);
+            if (reduceAmount && reduceAmount > 0) {
+                moneyArr[index].amount -= reduceAmount;
+                if (moneyArr[index].amount <= 0) {
+                    moneyArr.splice(index, 1);
+                }
+                localStorage.setItem('moneyArr', JSON.stringify(moneyArr));
+                updateList();
+            }
+        }
+        updateList();
+    </script>
+</body>
+</html>
